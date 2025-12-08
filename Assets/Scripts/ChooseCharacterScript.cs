@@ -1,16 +1,13 @@
 ﻿using UnityEngine;
-using UnityEngine.TextCore.Text;
-using TMPro;
-
 
 public class ChooseCharacterScript : MonoBehaviour
 {
-    public GameObject[] characters;   // FIXED: character → characters
+    public GameObject[] characters;
     int characterIndex;
 
     public GameObject inputField;
-    string characterName;             // kept same name since you used it
-    public int playerCount = 6;
+    string characterName;
+    public int playerCount = 2;
     public SceneChanger sceneChanger;
 
     private void Awake()
@@ -29,7 +26,7 @@ public class ChooseCharacterScript : MonoBehaviour
         characters[characterIndex].SetActive(false);
         characterIndex++;
 
-        if (characterIndex == characters.Length)   // FIXED: .length → .Length
+        if (characterIndex == characters.Length)
         {
             characterIndex = 0;
         }
@@ -40,10 +37,9 @@ public class ChooseCharacterScript : MonoBehaviour
     {
         characters[characterIndex].SetActive(false);
         characterIndex--;
-
         if (characterIndex == -1)
         {
-            characterIndex = characters.Length - 1; // FIXED: characters.Length exists now
+            characterIndex = characters.Length - 1;
         }
         characters[characterIndex].SetActive(true);
     }
@@ -57,11 +53,10 @@ public class ChooseCharacterScript : MonoBehaviour
             PlayerPrefs.SetInt("SelectedCharacter", characterIndex);
             PlayerPrefs.SetString("PlayerName", characterName);
             PlayerPrefs.SetInt("PlayerCount", playerCount);
+            StartCoroutine(sceneChanger.Delay("play", characterIndex, characterName));
 
-             StartCoroutine(sceneChanger.Delay("play", characterIndex, characterName));
         }
         else
             inputField.GetComponent<TMPro.TMP_InputField>().Select();
-    
     }
 }

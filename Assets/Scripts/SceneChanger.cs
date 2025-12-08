@@ -32,7 +32,7 @@ public class SceneChanger : MonoBehaviour
             } else if (string.Equals(command, "play", System.StringComparison.OrdinalIgnoreCase))
         
         {
-            yield return fadeScript.FadeIn(0.2f);
+            yield return fadeScript.FadeOut(0.2f);
             saveLoadScript.SaveGame(characterIndex, characterName);
             SceneManager.LoadScene(1, LoadSceneMode.Single);
 

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6116082348061981705}
   - component: {fileID: 4359854917069570108}
   - component: {fileID: 4980463989305483266}
+  - component: {fileID: -2974471659901336654}
   m_Layer: 0
   m_Name: FallenAngel1
   m_TagString: Untagged
@@ -111,6 +112,18 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &-2974471659901336654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2446604880124916236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 789928d3e76ad174282f3e10a7adeff4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7286098886928936234
 GameObject:
   m_ObjectHideFlags: 0
@@ -123,7 +136,7 @@ GameObject:
   - component: {fileID: 1531230086535665625}
   - component: {fileID: 1544136164261274592}
   m_Layer: 0
-  m_Name: NameField1
+  m_Name: NameField
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

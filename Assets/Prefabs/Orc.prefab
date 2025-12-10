@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4730605068923751088}
   - component: {fileID: 1467425894690857874}
   - component: {fileID: 7023348505264074133}
+  - component: {fileID: -5259647940545104647}
   m_Layer: 0
   m_Name: Orc
   m_TagString: Untagged
@@ -111,6 +112,18 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &-5259647940545104647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2496388428436056443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 789928d3e76ad174282f3e10a7adeff4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7559980852570395323
 GameObject:
   m_ObjectHideFlags: 0
@@ -123,7 +136,7 @@ GameObject:
   - component: {fileID: 5832811863776148627}
   - component: {fileID: 6257754654449981430}
   m_Layer: 0
-  m_Name: NameField4
+  m_Name: NameField
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

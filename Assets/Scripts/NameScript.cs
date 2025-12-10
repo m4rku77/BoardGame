@@ -6,8 +6,15 @@ public class NameScript : MonoBehaviour
 
     void Awake()
     {
-        tMP = transform.Find("NameField").gameObject.GetComponent<TextMeshPro>();    
+        // This finds TextMeshPro/TMP_Text components in any child, even if inactive
+        tMP = GetComponentInChildren<TextMeshPro>(true);
+
+        if (tMP == null)
+        {
+            Debug.LogError("NameScript: No TextMeshPro component found in children of " + gameObject.name);
+        }
     }
+
 
     public void SetName (string name)
     {

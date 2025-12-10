@@ -51,7 +51,9 @@ namespace UnityStandardAssets.ImageEffects
                     if (textureImporter.mipmapEnabled == true) {
                         doImport = true;
                     }
-                    if (textureImporter.textureFormat != TextureImporterFormat.AutomaticTruecolor) {
+                    // Check if texture needs reimport
+                    if (textureImporter.textureCompression != TextureImporterCompression.Uncompressed)
+                    {
                         doImport = true;
                     }
 
@@ -59,10 +61,17 @@ namespace UnityStandardAssets.ImageEffects
                     {
                         textureImporter.isReadable = true;
                         textureImporter.mipmapEnabled = false;
-                        textureImporter.textureFormat = TextureImporterFormat.AutomaticTruecolor;
-                        AssetDatabase.ImportAsset (path, ImportAssetOptions.ForceUpdate);
-                        //tex = AssetDatabase.LoadMainAssetAtPath(path);
+
+                        // Replacement for AutomaticTruecolor
+                        textureImporter.textureCompression = TextureImporterCompression.Uncompressed;
+
+                        // Optional equivalents for old truecolor behavior
+                        textureImporter.sRGBTexture = true;
+                        textureImporter.alphaSource = TextureImporterAlphaSource.FromInput;
+
+                        AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
                     }
+
 
                     (target as ColorCorrectionLookup).Convert(tex, path);
                 }

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6169416052356365714}
   - component: {fileID: 4784290082303464908}
   - component: {fileID: 7997267185530701762}
+  - component: {fileID: 5594578878720870461}
   m_Layer: 0
   m_Name: Warrior1
   m_TagString: Untagged
@@ -111,6 +112,18 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &5594578878720870461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3212141830384454114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 789928d3e76ad174282f3e10a7adeff4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3228860728187205337
 GameObject:
   m_ObjectHideFlags: 0
@@ -123,7 +136,7 @@ GameObject:
   - component: {fileID: 1153348194467352757}
   - component: {fileID: 114482445428625790}
   m_Layer: 0
-  m_Name: NameField5
+  m_Name: NameField
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

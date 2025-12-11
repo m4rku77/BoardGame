@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class SideDetectScript : MonoBehaviour
 {
-
     DiceRollScript diceRollScript;
+
     void Awake()
     {
         diceRollScript = FindFirstObjectByType<DiceRollScript>();
@@ -13,14 +13,15 @@ public class SideDetectScript : MonoBehaviour
     {
         if (diceRollScript != null)
         {
-            if (diceRollScript.GetComponent<Rigidbody>().linearVelocity == Vector3.zero) ;
+            if (diceRollScript.GetComponent<Rigidbody>().linearVelocity == Vector3.zero)
             {
                 diceRollScript.isLanded = true;
                 diceRollScript.diceFaceNum = sideCollider.name;
+
             }
+            else
 
-            diceRollScript.isLanded = false;
-
+                diceRollScript.isLanded = false;
         }
     }
 }

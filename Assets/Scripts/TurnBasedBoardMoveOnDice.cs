@@ -16,8 +16,12 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
     [SerializeField] private float moveSpeed = 4f;
     [SerializeField] private float rotateSpeed = 720f;
     [SerializeField] private float arriveDistance = 0.05f;
+    [SerializeField] private float stepPause = 0.05f;
 
     private readonly List<Transform> waypoints = new List<Transform>();
+
+    // ✅ Each player keeps their own board position
+    private readonly Dictionary<Transform, int> playerIndex = new Dictionary<Transform, int>();
 
     private int currentTurn = 0;
     private bool isMoving = false;
@@ -26,6 +30,24 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
     private void Start()
     {
         BuildWaypointList();
+        StartCoroutine(InitPlayersRoutine());
+    }
+
+    private IEnumerator InitPlayersRoutine()
+    {
+        // wait until players are spawned & registered
+        while (PlayerRegistry.Players.Count == 0)
+            yield return null;
+
+        // init each player's current tile (closest)
+        foreach (var p in PlayerRegistry.Players)
+        {
+            if (p == null) continue;
+            playerIndex[p] = FindClosestWaypointIndex(p.position);
+        }
+
+        // optional: print whose turn it is
+        Debug.Log($"Turn 1: {PlayerRegistry.Players[currentTurn].name}");
     }
 
     private void Update()
@@ -33,15 +55,18 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
         if (dice == null || waypoints.Count == 0) return;
         if (PlayerRegistry.Players.Count == 0) return;
 
-        // reset "consumed" when dice is not landed
+        // ✅ do not move unless user has rolled at least once
+        if (!dice.firstThrow) return;
+
+        // reset landing consumption when dice not landed
         if (!dice.isLanded)
         {
             consumedThisLanding = false;
             return;
         }
 
-        // only move once per landing + only after first throw
-        if (dice.isLanded && dice.firstThrow && !consumedThisLanding && !isMoving)
+        // consume landing once
+        if (dice.isLanded && !consumedThisLanding && !isMoving)
         {
             consumedThisLanding = true;
 
@@ -56,14 +81,24 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
         isMoving = true;
 
         Transform player = PlayerRegistry.Players[currentTurn];
-        int currentIndex = FindClosestWaypointIndex(player.position);
+        if (player == null)
+        {
+            isMoving = false;
+            yield break;
+        }
+
+        if (!playerIndex.ContainsKey(player))
+            playerIndex[player] = FindClosestWaypointIndex(player.position);
 
         for (int i = 0; i < steps; i++)
         {
-            if (currentIndex >= waypoints.Count - 1) break;
+            int idx = playerIndex[player];
+            if (idx >= waypoints.Count - 1) break;
 
-            currentIndex++;
-            Transform target = waypoints[currentIndex];
+            idx++;
+            playerIndex[player] = idx;
+
+            Transform target = waypoints[idx];
 
             while (Vector3.Distance(player.position, target.position) > arriveDistance)
             {
@@ -80,29 +115,35 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
                 yield return null;
             }
 
-            yield return new WaitForSeconds(0.05f);
+            yield return new WaitForSeconds(stepPause);
         }
 
         isMoving = false;
 
-        // ✅ next player's turn
+        // ✅ next turn
         currentTurn = (currentTurn + 1) % PlayerRegistry.Players.Count;
+        Debug.Log($"Next turn: {PlayerRegistry.Players[currentTurn].name}");
 
-        // optional: force player to roll again (prevents auto re-trigger)
+        // ✅ prepare for next roll (VERY IMPORTANT)
         dice.ResetDice();
+        consumedThisLanding = false;
     }
 
     private int ParseDiceNumber(string s)
     {
         if (string.IsNullOrEmpty(s)) return 0;
-        if (int.TryParse(s, out int val) && val > 0)
+
+        // if your sides are named "Side1" etc, SideDetect already strips it.
+        if (int.TryParse(s, out int val))
             return Mathf.Clamp(val, 1, 6);
+
         return 0;
     }
 
     private void BuildWaypointList()
     {
         waypoints.Clear();
+
         for (int i = firstWaypointIndex; i <= lastWaypointIndex; i++)
         {
             GameObject go = GameObject.Find(waypointPrefix + i);

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class DiceRollScript : MonoBehaviour
 {
@@ -14,8 +14,15 @@ public class DiceRollScript : MonoBehaviour
     void Awake()
     {
         startPosition = transform.position;
+
+        // ✅ hard reset so it can NEVER start as landed with an old value
+        isLanded = false;
+        firstThrow = false;
+        diceFaceNum = "";
+
         Initialize();
     }
+
 
     private void Initialize()
     {
@@ -28,6 +35,9 @@ public class DiceRollScript : MonoBehaviour
 
     private void RollDice()
     {
+        isLanded = false;
+        diceFaceNum = "";
+
         rBody.isKinematic = false;
         forceX = Random.Range(0, maxRandForcVal);
         forceY = Random.Range(0, maxRandForcVal);

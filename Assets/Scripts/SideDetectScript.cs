@@ -16,6 +16,14 @@ public class SideDetectScript : MonoBehaviour
         if (diceRollScript == null || rb == null)
             return;
 
+        // ✅ Only detect after the dice has been thrown at least once
+        if (!diceRollScript.firstThrow)
+            return;
+
+        // ✅ Prevent re-detecting once already landed
+        if (diceRollScript.isLanded)
+            return;
+
         // Optional: only detect when touching floor
         if (!other.CompareTag("Floor"))
             return;
@@ -26,12 +34,11 @@ public class SideDetectScript : MonoBehaviour
         {
             diceRollScript.isLanded = true;
 
-            // ✅ THIS is the important fix
-            // If your side objects are named "1", "2", "3", etc.
-            diceRollScript.diceFaceNum = gameObject.name;
+            // ✅ If your side objects are named Side1..Side6
+            diceRollScript.diceFaceNum = gameObject.name.Replace("Side", "");
 
-            // If named "Side1", "Side2", etc. use:
-            // diceRollScript.diceFaceNum = gameObject.name.Replace("Side", "");
+            // If your side objects are named just "1".."6", use instead:
+            // diceRollScript.diceFaceNum = gameObject.name;
         }
     }
 }

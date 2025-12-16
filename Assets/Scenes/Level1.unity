@@ -427,8 +427,8 @@ Transform:
   - {fileID: 124786749}
   - {fileID: 907395154}
   - {fileID: 1870621214}
-  - {fileID: 517995282}
   - {fileID: 415576630}
+  - {fileID: 517995282}
   - {fileID: 1288879144}
   - {fileID: 977888021}
   - {fileID: 1512802027}
@@ -1724,57 +1724,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 53702011}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &339919878
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 339919880}
-  - component: {fileID: 339919879}
-  m_Layer: 0
-  m_Name: BoardMoveOnDice
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &339919879
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 339919878}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 317f54bd78fcf714cac45374baa74b52, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  dice: {fileID: 1710361571}
-  waypointPrefix: P
-  firstWaypointIndex: 2
-  lastWaypointIndex: 120
-  moveSpeed: 4
-  rotateSpeed: 720
-  arriveDistance: 0.05
---- !u!4 &339919880
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 339919878}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.3420201, y: -0, z: -0, w: 0.9396927}
-  m_LocalPosition: {x: 1, y: 5, z: 1}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &360956518
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2085,13 +2034,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce9390daa75a5524b9537c0327c28d02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dice: {fileID: 0}
+  faceCameraAlways: 1
+  faceCamera: {fileID: 0}
+  faceCameraRotateSpeed: 720
+  dice: {fileID: 1710361571}
   waypointPrefix: P
   firstWaypointIndex: 2
   lastWaypointIndex: 120
   moveSpeed: 4
   rotateSpeed: 720
   arriveDistance: 0.05
+  stepPause: 0.05
 --- !u!1 &377362935
 GameObject:
   m_ObjectHideFlags: 0
@@ -2179,7 +2132,7 @@ Transform:
   m_GameObject: {fileID: 415576629}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.558, y: -2.371, z: -0.831}
+  m_LocalPosition: {x: -3.558, y: -2.3710022, z: -0.83100015}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4817,7 +4770,7 @@ Transform:
   m_GameObject: {fileID: 1023045375}
   serializedVersion: 2
   m_LocalRotation: {x: 0.30070576, y: -0, z: -0, w: 0.953717}
-  m_LocalPosition: {x: -2.615, y: 0.988, z: 3.462}
+  m_LocalPosition: {x: -2.615, y: 0.988, z: 3.176}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8348,7 +8301,7 @@ Transform:
   m_GameObject: {fileID: 1803556118}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.666, y: -3.544, z: -0.831}
+  m_LocalPosition: {x: -2.797, y: -3.896, z: -0.831}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9539,4 +9492,3 @@ SceneRoots:
   - {fileID: 373189053}
   - {fileID: 1453458842}
   - {fileID: 201952734}
-  - {fileID: 339919880}

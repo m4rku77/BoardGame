@@ -1,43 +1,73 @@
 ﻿using UnityEngine;
-using System.IO;
+
 public class PlayerScript : MonoBehaviour
 {
     public GameObject[] playerPrefabs;
-    int characterIndex;
     public GameObject spawnPoint;
-    int[] otherPlayers;
-    int index;
+
+    private int characterIndex;
+    private int index;
+
     private const string textFileName = "PlayerNames";
-        
-        
+
     void Start()
     {
-        characterIndex = PlayerPrefs.GetInt("SelectedCharacter", 0);
-        GameObject mainCharacter = Instantiate(
-            playerPrefabs[characterIndex], spawnPoint.transform.position, Quaternion.identity);
-        mainCharacter.GetComponent<NameScript>().SetName(
-            PlayerPrefs.GetString("PlayerName", "Džonijs Dūū"));
+        // ✅ Clear registry each time scene starts
+        PlayerRegistry.Clear();
 
-        otherPlayers = new int[PlayerPrefs.GetInt("PlayerCount")];
+        // ✅ Spawn main player
+        characterIndex = PlayerPrefs.GetInt("SelectedCharacter", 0);
+
+        GameObject mainCharacter = Instantiate(
+            playerPrefabs[characterIndex],
+            spawnPoint.transform.position,
+            Quaternion.identity
+        );
+
+        mainCharacter.GetComponent<NameScript>().SetName(
+            PlayerPrefs.GetString("PlayerName", "Džonijs Dūū")
+        );
+
+        // ✅ Register main player for turn system
+        PlayerRegistry.Register(mainCharacter.transform);
+
+        // ✅ Spawn other players
+        int playerCount = PlayerPrefs.GetInt("PlayerCount", 2); // default 2 if missing
         string[] nameArray = ReadLinesFromFile(textFileName);
-    
-    for (int i=0; i<otherPlayers.Length-1; i++)
+
+        for (int i = 0; i < playerCount - 1; i++)
         {
             spawnPoint.transform.position += new Vector3(0.2f, 0, 0.08f);
+
             index = Random.Range(0, playerPrefabs.Length);
+
             GameObject otherPlayer = Instantiate(
-                playerPrefabs[index], spawnPoint.transform.position, Quaternion.identity);
-            otherPlayer.GetComponent<NameScript>().SetName(
-                nameArray[Random.Range(0, nameArray.Length)]);
+                playerPrefabs[index],
+                spawnPoint.transform.position,
+                Quaternion.identity
+            );
+
+            if (nameArray.Length > 0)
+            {
+                otherPlayer.GetComponent<NameScript>().SetName(
+                    nameArray[Random.Range(0, nameArray.Length)]
+                );
+            }
+            else
+            {
+                otherPlayer.GetComponent<NameScript>().SetName("Player " + (i + 2));
+            }
+
+            // ✅ Register other player for turn system
+            PlayerRegistry.Register(otherPlayer.transform);
         }
-    
     }
 
     string[] ReadLinesFromFile(string fileName)
     {
         TextAsset textAsset = Resources.Load<TextAsset>(fileName);
 
-        if (textAsset!= null)
+        if (textAsset != null)
         {
             return textAsset.text.Split(new[] { '\r', '\n' },
                 System.StringSplitOptions.RemoveEmptyEntries);
@@ -48,6 +78,4 @@ public class PlayerScript : MonoBehaviour
             return new string[0];
         }
     }
-
-    
 }

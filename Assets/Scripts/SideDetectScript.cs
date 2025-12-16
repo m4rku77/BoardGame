@@ -1,27 +1,37 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class SideDetectScript : MonoBehaviour
 {
-    DiceRollScript diceRollScript;
+    private DiceRollScript diceRollScript;
+    private Rigidbody rb;
 
-    void Awake()
+    private void Awake()
     {
-        diceRollScript = FindFirstObjectByType<DiceRollScript>();
+        diceRollScript = GetComponentInParent<DiceRollScript>();
+        rb = GetComponentInParent<Rigidbody>();
     }
 
-    private void OnTriggerStay(Collider sideCollider)
+    private void OnTriggerStay(Collider other)
     {
-        if (diceRollScript != null)
+        if (diceRollScript == null || rb == null)
+            return;
+
+        // Optional: only detect when touching floor
+        if (!other.CompareTag("Floor"))
+            return;
+
+        // Dice must be basically stopped
+        if (rb.linearVelocity.sqrMagnitude < 0.0005f &&
+            rb.angularVelocity.sqrMagnitude < 0.0005f)
         {
-            if (diceRollScript.GetComponent<Rigidbody>().linearVelocity == Vector3.zero)
-            {
-                diceRollScript.isLanded = true;
-                diceRollScript.diceFaceNum = sideCollider.name;
+            diceRollScript.isLanded = true;
 
-            }
-            else
+            // ✅ THIS is the important fix
+            // If your side objects are named "1", "2", "3", etc.
+            diceRollScript.diceFaceNum = gameObject.name;
 
-                diceRollScript.isLanded = false;
+            // If named "Side1", "Side2", etc. use:
+            // diceRollScript.diceFaceNum = gameObject.name.Replace("Side", "");
         }
     }
 }

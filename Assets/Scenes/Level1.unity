@@ -1387,6 +1387,10 @@ PrefabInstance:
       propertyPath: m_IsTrigger
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7818530429083503460, guid: 0520e268e72d34844b52ad3a8b2473ff, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: cbff638bf8da3fd4e802669397794885, type: 2}
     - target: {fileID: 8611441520705628849, guid: 0520e268e72d34844b52ad3a8b2473ff, type: 3}
       propertyPath: m_Name
       value: Dice
@@ -2301,17 +2305,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce9390daa75a5524b9537c0327c28d02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  faceCameraAlways: 1
-  faceCamera: {fileID: 1387022980}
-  faceCameraRotateSpeed: 720
   dice: {fileID: 1710361571}
   waypointPrefix: P
   firstWaypointIndex: 2
   lastWaypointIndex: 120
   moveSpeed: 4
-  rotateSpeed: 720
   arriveDistance: 0.05
   stepPause: 0.05
+  faceCameraAlways: 1
+  faceCamera: {fileID: 1387022980}
+  faceCameraRotateSpeed: 720
+  faceCameraYawOffset: 180
+  jumps:
+  - from: 4
+    to: 25
+  - from: 8
+    to: 28
+  - from: 15
+    to: 7
+  - from: 18
+    to: 3
+  - from: 22
+    to: 20
+  - from: 107
+    to: 23
+  - from: 26
+    to: 45
+  - from: 32
+    to: 10
+  - from: 34
+    to: 97
+  - from: 49
+    to: 70
+  - from: 64
+    to: 78
+  - from: 71
+    to: 69
+  - from: 83
+    to: 103
+  - from: 111
+    to: 91
+  - from: 93
+    to: 114
+  - from: 100
+    to: 82
+  - from: 105
+    to: 117
+  - from: 118
+    to: 102
+  jumpSpeedMultiplier: 2.5
 --- !u!114 &373189059
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3929,7 +3971,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -28.8704, y: -26.374}
+  m_AnchoredPosition: {x: -46.30005, y: -40.900024}
   m_SizeDelta: {x: 57.7413, y: 52.7485}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &655074562
@@ -7973,13 +8015,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1387022978}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.3420201, y: 0, z: 0, w: 0.9396927}
-  m_LocalPosition: {x: 1, y: 5, z: 1}
+  m_LocalRotation: {x: 0.5, y: 0, z: 0, w: 0.8660254}
+  m_LocalPosition: {x: 1, y: 6, z: 2.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 40, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 60, y: 0, z: 0}
 --- !u!1 &1393767026
 GameObject:
   m_ObjectHideFlags: 0
@@ -8746,7 +8788,7 @@ Transform:
   m_GameObject: {fileID: 1453458840}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 533.69934, y: 333.27393, z: 211.55367}
+  m_LocalPosition: {x: 516.2697, y: 318.74792, z: 211.55367}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

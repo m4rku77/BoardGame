@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
@@ -14,7 +14,6 @@ public class SettingsMenuScript : MonoBehaviour
 
     [Header("Defaults")]
     [SerializeField, Range(0f, 1f)] private float defaultMusicVolume = 0.8f;
-    [SerializeField] private bool overrideSavedZeroVolume = true; // if saved volume is 0, use default instead
 
     private bool isLoading = false;
 
@@ -36,6 +35,8 @@ public class SettingsMenuScript : MonoBehaviour
         isLoading = false;
     }
 
+    // ---------------- RESOLUTION ----------------
+
     private void SetupResolutionDropdown()
     {
         if (ResDown == null) return;
@@ -48,8 +49,11 @@ public class SettingsMenuScript : MonoBehaviour
         {
             options.Add($"{resolutions[i].width} x {resolutions[i].height}");
 
-            if (Screen.width == resolutions[i].width && Screen.height == resolutions[i].height)
+            if (Screen.width == resolutions[i].width &&
+                Screen.height == resolutions[i].height)
+            {
                 currentIndex = i;
+            }
         }
 
         ResDown.AddOptions(options);
@@ -69,30 +73,22 @@ public class SettingsMenuScript : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    // ---------------- MUSIC ----------------
+
     public void OnMusicVolumeChanged(float value)
     {
         value = Mathf.Clamp01(value);
 
         if (musicSource == null) return;
 
-        // Only change volume � DO NOT stop music
+        // ONLY change volume
         musicSource.volume = value;
 
-        // Ensure music is playing if volume > 0
-        if (!musicSource.isPlaying && value > 0.01f)
-        {
-            if (musicSource.clip != null)
-                musicSource.Play();
-        }
-
-        // Save only after loading phase
-        if (!isLoading)
-        {
-            PlayerPrefs.SetFloat("MusicVolume", value);
-            PlayerPrefs.Save();
-        }
+        PlayerPrefs.SetFloat("MusicVolume", value);
+        PlayerPrefs.Save();
     }
 
+    // ---------------- FULLSCREEN ----------------
 
     public void OnFullscreenToggle(bool isFullscreen)
     {
@@ -105,7 +101,6 @@ public class SettingsMenuScript : MonoBehaviour
         PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
         PlayerPrefs.Save();
 
-        // Re-apply resolution with the new fullscreen mode
         if (ResDown != null)
             ApplyResolution(ResDown.value, isFullscreen);
     }
@@ -117,28 +112,38 @@ public class SettingsMenuScript : MonoBehaviour
         Screen.SetResolution(r.width, r.height, fullscreen);
     }
 
+    // ---------------- LOAD ----------------
+
     private void LoadSettings()
     {
-        // ----- Music -----
+        // Music
         float volume = PlayerPrefs.GetFloat("MusicVolume", defaultMusicVolume);
         volume = Mathf.Clamp01(volume);
 
-        // If player once saved 0, we can ignore it and use default
-        if (overrideSavedZeroVolume && volume < 0.01f)
+        // ✅ If saved volume is 0, start with default instead
+        if (volume <= 0.001f)
+        {
             volume = defaultMusicVolume;
+            PlayerPrefs.SetFloat("MusicVolume", volume);
+            PlayerPrefs.Save();
+        }
 
-        if (Musicbar != null) Musicbar.value = volume;
-        OnMusicVolumeChanged(volume); // apply + (re)start music safely
+        if (Musicbar != null)
+            Musicbar.value = volume;
 
-        // ----- Fullscreen -----
+        if (musicSource != null)
+            musicSource.volume = volume;
+
+        // Fullscreen
         bool fullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
-        if (fullscreenToggle != null) fullscreenToggle.isOn = fullscreen;
+        if (fullscreenToggle != null)
+            fullscreenToggle.isOn = fullscreen;
 
         Screen.fullScreenMode = fullscreen
             ? FullScreenMode.FullScreenWindow
             : FullScreenMode.Windowed;
 
-        // ----- Resolution -----
+        // Resolution
         int resIndex = PlayerPrefs.GetInt("ResIndex", 2);
         resIndex = Mathf.Clamp(resIndex, 0, resolutions.Length - 1);
 
@@ -151,13 +156,17 @@ public class SettingsMenuScript : MonoBehaviour
         ApplyResolution(resIndex, fullscreen);
     }
 
-    // Optional: hook this to a "Reset Audio" button
+
+    // Optional reset
     public void ResetMusicToDefault()
     {
-        PlayerPrefs.DeleteKey("MusicVolume");
+        PlayerPrefs.SetFloat("MusicVolume", defaultMusicVolume);
         PlayerPrefs.Save();
 
-        if (Musicbar != null) Musicbar.value = defaultMusicVolume;
-        OnMusicVolumeChanged(defaultMusicVolume);
+        if (Musicbar != null)
+            Musicbar.value = defaultMusicVolume;
+
+        if (musicSource != null)
+            musicSource.volume = defaultMusicVolume;
     }
 }

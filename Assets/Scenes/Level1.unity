@@ -473,10 +473,10 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 373189060}
         m_TargetAssemblyTypeName: SettingsMenuScript, Assembly-CSharp
         m_MethodName: OnFullscreenToggle
-        m_Mode: 6
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -2934,6 +2934,7 @@ GameObject:
   - component: {fileID: 373189057}
   - component: {fileID: 373189058}
   - component: {fileID: 373189059}
+  - component: {fileID: 373189060}
   m_Layer: 0
   m_Name: ScriptHolder
   m_TagString: Untagged
@@ -3112,6 +3113,23 @@ MonoBehaviour:
   pausePanel: {fileID: 1866982160}
   leaderboardPanel: {fileID: 1545416122}
   settingsPanel: {fileID: 1528618386}
+--- !u!114 &373189060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 373189052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44e3a099c161e0147ab93cc2f52040ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ResDown: {fileID: 1782141318}
+  Musicbar: {fileID: 1732319321}
+  fullscreenToggle: {fileID: 34771857}
+  musicSource: {fileID: 1453458841}
+  defaultMusicVolume: 0.8
 --- !u!1 &377362935
 GameObject:
   m_ObjectHideFlags: 0
@@ -13647,10 +13665,10 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 373189060}
         m_TargetAssemblyTypeName: SettingsMenuScript, Assembly-CSharp
         m_MethodName: OnMusicVolumeChanged
-        m_Mode: 4
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -14109,10 +14127,10 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 373189060}
         m_TargetAssemblyTypeName: SettingsMenuScript, Assembly-CSharp
         m_MethodName: OnResolutionChanged
-        m_Mode: 3
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

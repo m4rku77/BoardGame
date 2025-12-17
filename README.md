@@ -9,3 +9,8 @@
 - [ ] Character selection screen with animation
 - [ ] Settings scene
 - [ ] Board scene with throwable dice
+
+
++ need to have walking animations + one
++ need to work settings
++ need to include how many players will be there

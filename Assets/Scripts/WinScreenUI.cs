@@ -3,14 +3,12 @@ using UnityEngine;
 
 public class WinScreenUI : MonoBehaviour
 {
-    [Header("Assign these Text (TMP) objects")]
     [SerializeField] private TMP_Text timeText;
     [SerializeField] private TMP_Text movesText;
     [SerializeField] private TMP_Text scoreText;
 
     public void Show(float timeSeconds, int moves, int score)
     {
-        // format time as mm:ss
         int mins = Mathf.FloorToInt(timeSeconds / 60f);
         int secs = Mathf.FloorToInt(timeSeconds % 60f);
 
@@ -19,5 +17,6 @@ public class WinScreenUI : MonoBehaviour
         if (scoreText != null) scoreText.text = $"Score: {score}";
 
         gameObject.SetActive(true);
+        transform.SetAsLastSibling();
     }
 }

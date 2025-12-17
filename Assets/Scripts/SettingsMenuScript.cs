@@ -10,7 +10,13 @@ public class SettingsMenuScript : MonoBehaviour
     [SerializeField] private Toggle fullscreenToggle;
 
     [Header("Music")]
-    [SerializeField] private AudioSource musicSource; // drag your Music AudioSource here
+    [SerializeField] private AudioSource musicSource;
+
+    [Header("Defaults")]
+    [SerializeField, Range(0f, 1f)] private float defaultMusicVolume = 0.8f;
+    [SerializeField] private bool overrideSavedZeroVolume = true; // if saved volume is 0, use default instead
+
+    private bool isLoading = false;
 
     private Resolution[] resolutions = new Resolution[]
     {
@@ -22,19 +28,25 @@ public class SettingsMenuScript : MonoBehaviour
 
     private void Start()
     {
+        isLoading = true;
+
         SetupResolutionDropdown();
         LoadSettings();
+
+        isLoading = false;
     }
 
     private void SetupResolutionDropdown()
     {
+        if (ResDown == null) return;
+
         ResDown.ClearOptions();
         var options = new List<string>();
         int currentIndex = 0;
 
         for (int i = 0; i < resolutions.Length; i++)
         {
-            options.Add(resolutions[i].width + " x " + resolutions[i].height);
+            options.Add($"{resolutions[i].width} x {resolutions[i].height}");
 
             if (Screen.width == resolutions[i].width && Screen.height == resolutions[i].height)
                 currentIndex = i;
@@ -47,10 +59,11 @@ public class SettingsMenuScript : MonoBehaviour
 
     public void OnResolutionChanged(int index)
     {
-        var r = resolutions[index];
-        bool fullscreen = Screen.fullScreen;
+        if (isLoading) return;
+        if (index < 0 || index >= resolutions.Length) return;
 
-        Screen.SetResolution(r.width, r.height, fullscreen);
+        var r = resolutions[index];
+        Screen.SetResolution(r.width, r.height, Screen.fullScreen);
 
         PlayerPrefs.SetInt("ResIndex", index);
         PlayerPrefs.Save();
@@ -58,55 +71,93 @@ public class SettingsMenuScript : MonoBehaviour
 
     public void OnMusicVolumeChanged(float value)
     {
-        // value should be 0..1
-        if (musicSource != null)
-        {
-            musicSource.volume = value;
+        value = Mathf.Clamp01(value);
 
-            if (!musicSource.isPlaying && value > 0.001f)
+        if (musicSource == null) return;
+
+        // Only change volume — DO NOT stop music
+        musicSource.volume = value;
+
+        // Ensure music is playing if volume > 0
+        if (!musicSource.isPlaying && value > 0.01f)
+        {
+            if (musicSource.clip != null)
                 musicSource.Play();
         }
 
-        PlayerPrefs.SetFloat("MusicVolume", value);
-        PlayerPrefs.Save();
+        // Save only after loading phase
+        if (!isLoading)
+        {
+            PlayerPrefs.SetFloat("MusicVolume", value);
+            PlayerPrefs.Save();
+        }
     }
+
 
     public void OnFullscreenToggle(bool isFullscreen)
     {
-        if (isFullscreen)
-        {
-            Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
-            Screen.fullScreen = true;
-        }
-        else
-        {
-            Screen.fullScreenMode = FullScreenMode.Windowed;
-            Screen.fullScreen = false;
-        }
+        if (isLoading) return;
+
+        Screen.fullScreenMode = isFullscreen
+            ? FullScreenMode.FullScreenWindow
+            : FullScreenMode.Windowed;
 
         PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
         PlayerPrefs.Save();
+
+        // Re-apply resolution with the new fullscreen mode
+        if (ResDown != null)
+            ApplyResolution(ResDown.value, isFullscreen);
+    }
+
+    private void ApplyResolution(int index, bool fullscreen)
+    {
+        index = Mathf.Clamp(index, 0, resolutions.Length - 1);
+        var r = resolutions[index];
+        Screen.SetResolution(r.width, r.height, fullscreen);
     }
 
     private void LoadSettings()
     {
-        // Music
-        float volume = PlayerPrefs.GetFloat("MusicVolume", 0.8f);
-        Musicbar.value = volume;
-        OnMusicVolumeChanged(volume);
+        // ----- Music -----
+        float volume = PlayerPrefs.GetFloat("MusicVolume", defaultMusicVolume);
+        volume = Mathf.Clamp01(volume);
 
-        // Fullscreen
-        if (fullscreenToggle != null)
+        // If player once saved 0, we can ignore it and use default
+        if (overrideSavedZeroVolume && volume < 0.01f)
+            volume = defaultMusicVolume;
+
+        if (Musicbar != null) Musicbar.value = volume;
+        OnMusicVolumeChanged(volume); // apply + (re)start music safely
+
+        // ----- Fullscreen -----
+        bool fullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
+        if (fullscreenToggle != null) fullscreenToggle.isOn = fullscreen;
+
+        Screen.fullScreenMode = fullscreen
+            ? FullScreenMode.FullScreenWindow
+            : FullScreenMode.Windowed;
+
+        // ----- Resolution -----
+        int resIndex = PlayerPrefs.GetInt("ResIndex", 2);
+        resIndex = Mathf.Clamp(resIndex, 0, resolutions.Length - 1);
+
+        if (ResDown != null)
         {
-            bool fullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
-            fullscreenToggle.isOn = fullscreen;
-            OnFullscreenToggle(fullscreen);
+            ResDown.value = resIndex;
+            ResDown.RefreshShownValue();
         }
 
-        // Resolution
-        int resIndex = PlayerPrefs.GetInt("ResIndex", 2);
-        ResDown.value = Mathf.Clamp(resIndex, 0, resolutions.Length - 1);
-        ResDown.RefreshShownValue();
-        OnResolutionChanged(ResDown.value);
+        ApplyResolution(resIndex, fullscreen);
+    }
+
+    // Optional: hook this to a "Reset Audio" button
+    public void ResetMusicToDefault()
+    {
+        PlayerPrefs.DeleteKey("MusicVolume");
+        PlayerPrefs.Save();
+
+        if (Musicbar != null) Musicbar.value = defaultMusicVolume;
+        OnMusicVolumeChanged(defaultMusicVolume);
     }
 }

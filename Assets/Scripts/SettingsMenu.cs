@@ -15,11 +15,7 @@ public class SettingsMenu : MonoBehaviour
     public GameObject fadeOverlay;         // the black overlay GameObject (Image)
 
 
-    [Header("Music")]
-    public AudioSource musicSource;
-    public AudioClip music1;
-    public AudioClip music2;
-    public AudioClip music3;
+
 
     void Start()
     {
@@ -47,6 +43,7 @@ public class SettingsMenu : MonoBehaviour
 
         ShowMainMenu();
     }
+
 
     // ---------- LEADERBOARD ----------
 
@@ -121,16 +118,6 @@ public class SettingsMenu : MonoBehaviour
 
     // ---------- MUSIC ----------
 
-    public void PlayMusic1() => PlayMusic(music1);
-    public void PlayMusic2() => PlayMusic(music2);
-    public void PlayMusic3() => PlayMusic(music3);
 
-    private void PlayMusic(AudioClip clip)
-    {
-        if (clip == null || musicSource == null) return;
-        if (musicSource.clip == clip && musicSource.isPlaying) return;
 
-        musicSource.clip = clip;
-        musicSource.Play();
-    }
 }

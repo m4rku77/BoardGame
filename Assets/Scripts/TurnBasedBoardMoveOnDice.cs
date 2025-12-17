@@ -8,10 +8,16 @@ using UnityEngine.SceneManagement;
 
 public class TurnBasedBoardMoveOnDice : MonoBehaviour
 {
+    [Header("DEBUG")]
+    [SerializeField] private bool enableDebugWinKey = true;
+    [SerializeField] private KeyCode debugWinKey = KeyCode.F9;
+
+
     [Header("Win Screen")]
     [SerializeField] private GameObject winScreen;
 
     [SerializeField] private WinScreenUI winUI;
+    [SerializeField] private LeaderboardManagerTXT leaderboardTXT;
 
 
     [Header("Game Finish / Leaderboard")]
@@ -109,6 +115,8 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
 
     private void Start()
     {
+
+
         if (winUI != null) winUI.gameObject.SetActive(false);
 
 
@@ -136,6 +144,13 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
 
     private void Update()
     {
+        if (enableDebugWinKey && Input.GetKeyDown(debugWinKey) && !gameFinished)
+        {
+            DebugForceWin();
+            return;
+        }
+
+
         if (gameFinished) return;
         if (dice == null || waypoints.Count == 0) return;
         if (PlayerRegistry.Players.Count == 0) return;
@@ -163,6 +178,22 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
             }
         }
     }
+
+    private void DebugForceWin()
+    {
+        Debug.Log("DEBUG: Force Finish Game");
+
+        gameFinished = true;
+        isMoving = false;
+
+        // choose current player or first player safely
+        Transform winner = null;
+        if (PlayerRegistry.Players.Count > 0)
+            winner = PlayerRegistry.Players[currentTurn];
+
+        FinishGame(winner);
+    }
+
 
     private IEnumerator MoveCurrentPlayerSteps(int steps)
     {
@@ -361,30 +392,26 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
 
         SaveToLeaderboardFile(playerName, timeSeconds, moves, finalScore, totalTilesMoved);
 
-        Debug.Log($"WIN! time={timeSeconds:F1}s moves={moves} score={finalScore}");
-
-        // ✅ SHOW UI FIRST
-        if (winUI != null)
-        {
-            // make sure the panel is active + on top
-            winUI.gameObject.SetActive(true);
-            winUI.transform.SetAsLastSibling();
-
-            // update texts
-            winUI.Show(timeSeconds, moves, finalScore);
-        }
-        else if (winScreen != null)
+        // ✅ ALWAYS enable the root panel first (WinScreen in your hierarchy)
+        if (winScreen != null)
         {
             winScreen.SetActive(true);
             winScreen.transform.SetAsLastSibling();
         }
-        else
+
+        // ✅ Then update/enable the WinUI component (child)
+        if (winUI != null)
         {
-            Debug.LogWarning("No win UI assigned (winUI/winScreen are null).");
+            winUI.gameObject.SetActive(true);
+            winUI.Show(timeSeconds, moves, finalScore);
+            winUI.transform.SetAsLastSibling();
         }
 
-        // ✅ Freeze AFTER UI is visible
-        StartCoroutine(FreezeNextFrame());
+        // ✅ Force UI to rebuild this frame
+        Canvas.ForceUpdateCanvases();
+
+        // ✅ Freeze after the frame is rendered
+        StartCoroutine(FreezeAfterRendered());
     }
 
 
@@ -477,12 +504,12 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
             yield return new WaitForSeconds(stepPause);
         }
     }
-
-    private IEnumerator FreezeNextFrame()
+    private IEnumerator FreezeAfterRendered()
     {
-        yield return null;   // wait 1 frame so UI shows
+        yield return new WaitForEndOfFrame();  // ensures it actually renders
         Time.timeScale = 0f;
     }
+
 
     private EntryList LoadLeaderboardFile()
     {

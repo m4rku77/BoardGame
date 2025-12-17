@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
 
 public class PauseMenuScript : MonoBehaviour
 {
@@ -15,6 +17,16 @@ public class PauseMenuScript : MonoBehaviour
         ResumeGame();
         HideAll();
     }
+
+    public void GoToMenu()
+    {
+        // Make sure time is running again
+        Time.timeScale = 1f;
+        IsPaused = false;
+
+        SceneManager.LoadScene("SampleScene");
+    }
+
 
     private void Update()
     {

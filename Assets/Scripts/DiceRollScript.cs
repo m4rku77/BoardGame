@@ -2,20 +2,29 @@
 
 public class DiceRollScript : MonoBehaviour
 {
-    Rigidbody rBody;
-    Vector3 position, startPosition;
-    [SerializeField] private float maxRandForcVal, startRollingForce;
-    float forceX, forceY, forceZ;
-    public string diceFaceNum;
+    private Rigidbody rBody;
+    private Vector3 startPosition;
+
+    [SerializeField] private float maxRandForcVal = 10f;
+    [SerializeField] private float startRollingForce = 1200f;
+
+    [Header("Stuck Fix")]
+    [SerializeField] private bool autoRerollIfStuck = true;
+    [SerializeField] private float stuckTimeout = 2.5f;
+    [SerializeField] private float stopVelThreshold = 0.03f;
+    [SerializeField] private float stopAngThreshold = 0.03f;
+
+    private float settleTimer = 0f;
+
+    public string diceFaceNum = "";
     public bool isLanded = false;
     public bool firstThrow = false;
 
-
-    void Awake()
+    private void Awake()
     {
         startPosition = transform.position;
 
-        // ✅ hard reset so it can NEVER start as landed with an old value
+        // hard reset so it can NEVER start as landed with an old value
         isLanded = false;
         firstThrow = false;
         diceFaceNum = "";
@@ -23,59 +32,99 @@ public class DiceRollScript : MonoBehaviour
         Initialize();
     }
 
-
     private void Initialize()
     {
         rBody = GetComponent<Rigidbody>();
         rBody.isKinematic = true;
-        position = transform.position;
-        transform.rotation = new Quaternion(
-            Random.Range(0, 360), Random.Range(0, 360), Random.Range(0, 360), 0);
+
+        // random start rotation
+        transform.rotation = Random.rotation;
+
+        settleTimer = 0f;
     }
 
     private void RollDice()
     {
         isLanded = false;
         diceFaceNum = "";
+        settleTimer = 0f;
 
         rBody.isKinematic = false;
-        forceX = Random.Range(0, maxRandForcVal);
-        forceY = Random.Range(0, maxRandForcVal);
-        forceZ = Random.Range(0, maxRandForcVal);
-        rBody.AddForce(Vector3.up * Random.Range(800, startRollingForce));
-        rBody.AddTorque(forceX, forceY, forceZ);
+
+        float forceX = Random.Range(0, maxRandForcVal);
+        float forceY = Random.Range(0, maxRandForcVal);
+        float forceZ = Random.Range(0, maxRandForcVal);
+
+        rBody.AddForce(Vector3.up * Random.Range(800f, startRollingForce));
+        rBody.AddTorque(forceX, forceY, forceZ, ForceMode.Impulse);
     }
 
     public void ResetDice()
     {
         transform.position = startPosition;
+        transform.rotation = Random.rotation;
+
         firstThrow = false;
         isLanded = false;
+        diceFaceNum = "";
+
         Initialize();
     }
 
-
-    void Update()
+    // ✅ Call this from your UI Image/Button OnClick
+    public void ForceReroll()
     {
-        if (rBody != null)
+        // keep firstThrow = true so your turn system still counts this as a real roll
+        firstThrow = true;
+
+        isLanded = false;
+        diceFaceNum = "";
+        settleTimer = 0f;
+
+        // hard reset then roll again
+        transform.position = startPosition;
+        transform.rotation = Random.rotation;
+
+        rBody.isKinematic = true;
+        rBody.linearVelocity = Vector3.zero;
+        rBody.angularVelocity = Vector3.zero;
+
+        rBody.isKinematic = false;
+        RollDice();
+    }
+
+    private void Update()
+    {
+        if (rBody == null) return;
+
+        // Auto reroll if stuck on an edge and never lands properly
+        if (autoRerollIfStuck && !rBody.isKinematic && !isLanded && firstThrow)
         {
-            if (Input.GetMouseButtonDown(0) && isLanded ||
-                Input.GetMouseButtonDown(0) && !firstThrow)
+            bool almostStopped =
+                rBody.linearVelocity.sqrMagnitude < (stopVelThreshold * stopVelThreshold) &&
+                rBody.angularVelocity.sqrMagnitude < (stopAngThreshold * stopAngThreshold);
+
+            if (almostStopped) settleTimer += Time.deltaTime;
+            else settleTimer = 0f;
+
+            if (settleTimer >= stuckTimeout)
             {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
+                ForceReroll();
+                return;
+            }
+        }
 
-                if (Physics.Raycast(ray, out hit))
+        // Click dice to roll (first roll or reroll after landing)
+        if ((Input.GetMouseButtonDown(0) && isLanded) ||
+            (Input.GetMouseButtonDown(0) && !firstThrow))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                if (hit.collider != null && hit.collider.gameObject == gameObject)
                 {
-                    if (hit.collider != null && hit.collider.gameObject == this.gameObject)
-                    {
-                        if (!firstThrow)
-                        {
-                            firstThrow = true;
-                        }
-                        RollDice();
-                    }
-
+                    firstThrow = true;
+                    RollDice();
                 }
             }
         }

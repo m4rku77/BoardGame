@@ -1,15 +1,11 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class PauseMenuScript : MonoBehaviour
 {
-    [Header("Pause UI (in THIS gameplay scene)")]
+    [Header("Panels")]
     [SerializeField] private GameObject pausePanel;
-
-    [Header("Scenes (must match Build Settings names)")]
-    [SerializeField] private string menuSceneName = "Menu";
-    [SerializeField] private string leaderboardSceneName = "Leaderboard";
-    [SerializeField] private string settingsSceneName = "Settings";
+    [SerializeField] private GameObject leaderboardPanel;
+    [SerializeField] private GameObject settingsPanel;
 
     public bool IsPaused { get; private set; }
     private float prevTimeScale = 1f;
@@ -17,7 +13,7 @@ public class PauseMenuScript : MonoBehaviour
     private void Start()
     {
         ResumeGame();
-        if (pausePanel != null) pausePanel.SetActive(false);
+        HideAll();
     }
 
     private void Update()
@@ -37,38 +33,44 @@ public class PauseMenuScript : MonoBehaviour
         prevTimeScale = Time.timeScale;
         Time.timeScale = 0f;
 
-        if (pausePanel != null) pausePanel.SetActive(true);
+        HideAll();
+        pausePanel.SetActive(true);
     }
 
     public void Continue()
     {
-        if (!IsPaused) return;
-
         ResumeGame();
-        if (pausePanel != null) pausePanel.SetActive(false);
+        HideAll();
     }
 
     public void OpenLeaderboard()
     {
-        ResumeGame();
-        SceneManager.LoadScene(leaderboardSceneName);
+        HideAll();
+        leaderboardPanel.SetActive(true);
     }
 
     public void OpenSettings()
     {
-        ResumeGame();
-        SceneManager.LoadScene(settingsSceneName);
+        HideAll();
+        settingsPanel.SetActive(true);
     }
 
-    public void OpenMenu()
+    public void BackToPause()
     {
-        ResumeGame();
-        SceneManager.LoadScene(menuSceneName);
+        HideAll();
+        pausePanel.SetActive(true);
     }
 
     private void ResumeGame()
     {
         IsPaused = false;
         Time.timeScale = prevTimeScale <= 0f ? 1f : prevTimeScale;
+    }
+
+    private void HideAll()
+    {
+        pausePanel.SetActive(false);
+        leaderboardPanel.SetActive(false);
+        settingsPanel.SetActive(false);
     }
 }

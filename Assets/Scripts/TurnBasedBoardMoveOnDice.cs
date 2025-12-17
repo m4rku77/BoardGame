@@ -1,9 +1,31 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
 
 public class TurnBasedBoardMoveOnDice : MonoBehaviour
 {
+    [Header("Win Screen")]
+    [SerializeField] private GameObject winScreen;
+
+    [SerializeField] private WinScreenUI winUI;
+
+
+    [Header("Game Finish / Leaderboard")]
+    [SerializeField] private bool endGameWhenReachLastTile = true;
+    [SerializeField] private int maxLeaderboardEntries = 10;
+
+    private float gameStartTime;
+    private int totalDiceThrows = 0;   // moves = dice throws
+    private int totalTilesMoved = 0;   // optional
+    private int baseScore = 0;         // if 0 we calculate automatically
+
+    [Header("Camera Follow")]
+    [SerializeField] private CameraFollow cameraFollow;
+
     [Header("References")]
     [SerializeField] private DiceRollScript dice;
 
@@ -54,20 +76,45 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
         new JumpLink{ from = 118, to = 102 },
     };
 
-    [SerializeField] private float jumpSpeedMultiplier = 2.5f; // faster travel for jumps
+    [SerializeField] private float jumpSpeedMultiplier = 2.5f;
 
     private readonly List<Transform> waypoints = new List<Transform>();
 
-    // Board index: 0 = P2, 1 = P3, ...
-    private readonly Dictionary<Transform, int> playerIndex = new Dictionary<Transform, int>();
+    private readonly Dictionary<Transform, int> playerIndex = new Dictionary<Transform, int>(); // 0=P2
     private readonly Dictionary<Transform, bool> enteredBoard = new Dictionary<Transform, bool>();
 
     private int currentTurn = 0;
     private bool isMoving = false;
     private bool consumedThisLanding = false;
+    private bool gameFinished = false;
+
+    // ---------- Leaderboard JSON (saved to persistentDataPath) ----------
+    [Serializable]
+    public class Entry
+    {
+        public string name;
+        public float timeSeconds;
+        public int moves;
+        public int score;
+        public int tilesMoved;
+        public string date;
+    }
+    [Serializable]
+    public class EntryList
+    {
+        public List<Entry> entries = new List<Entry>();
+    }
+
+    private string savePath;
 
     private void Start()
     {
+        if (winUI != null) winUI.gameObject.SetActive(false);
+
+
+        gameStartTime = Time.time;
+        savePath = Path.Combine(Application.persistentDataPath, "leaderboard.json");
+
         BuildWaypointList();
         StartCoroutine(InitPlayersRoutine());
 
@@ -82,50 +129,56 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
         foreach (var p in PlayerRegistry.Players)
         {
             if (p == null) continue;
-
-            // Start OFF the board at spawnpoint (no snapping)
             enteredBoard[p] = false;
-            playerIndex[p] = 0; // first board tile is P2 (index 0)
+            playerIndex[p] = 0;
         }
     }
 
     private void Update()
     {
+        if (gameFinished) return;
         if (dice == null || waypoints.Count == 0) return;
         if (PlayerRegistry.Players.Count == 0) return;
         if (isMoving) return;
 
-        // don't move until a real roll happened
         if (!dice.firstThrow) return;
 
-        // reset consumed when dice not landed
         if (!dice.isLanded)
         {
             consumedThisLanding = false;
             return;
         }
 
-        // consume landing once
         if (dice.isLanded && !consumedThisLanding)
         {
             consumedThisLanding = true;
 
             int steps = ParseDiceNumber(dice.diceFaceNum);
+
+            // ✅ FIX: only start if steps > 0
             if (steps > 0)
+            {
+                totalDiceThrows++;
                 StartCoroutine(MoveCurrentPlayerSteps(steps));
+            }
         }
     }
 
     private IEnumerator MoveCurrentPlayerSteps(int steps)
     {
         isMoving = true;
+        int rolledSteps = steps;
 
         Transform player = PlayerRegistry.Players[currentTurn];
+
         if (player == null)
         {
             isMoving = false;
             yield break;
         }
+
+        if (cameraFollow != null)
+            cameraFollow.FocusOn(player);
 
         if (!enteredBoard.ContainsKey(player))
         {
@@ -133,7 +186,7 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
             playerIndex[player] = 0;
         }
 
-        // 1) Spawn -> P2 counts as 1 move
+        // Spawn -> P2 counts as 1 move
         if (!enteredBoard[player] && steps > 0)
         {
             yield return MoveToTarget(player, waypoints[0]); // P2
@@ -143,20 +196,13 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
             yield return new WaitForSeconds(stepPause);
         }
 
-        // 2) Normal dice steps along the board
-        for (int i = 0; i < steps; i++)
-        {
-            int idx = playerIndex[player];
-            if (idx >= waypoints.Count - 1) break;
+        // Normal steps
+        yield return MoveWithBounceBack(player, steps);
 
-            idx++;
-            playerIndex[player] = idx;
 
-            yield return MoveToTarget(player, waypoints[idx]);
-            yield return new WaitForSeconds(stepPause);
-        }
+        totalTilesMoved += rolledSteps;
 
-        // 3) Jump tiles (snakes/ladders) AFTER movement ends
+        // Jump tiles
         if (enteredBoard[player])
         {
             int landedTile = IndexToTile(playerIndex[player]);
@@ -166,19 +212,33 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
                 int fromIdx = playerIndex[player];
                 int toIdx = Mathf.Clamp(TileToIndex(destTile), 0, waypoints.Count - 1);
 
-                // fastest path on a linear board = walk forward/backward
                 yield return MoveAlongBoardFast(player, fromIdx, toIdx);
-
                 playerIndex[player] = toIdx;
             }
         }
+
+        // ✅ WIN CHECK (after jump too)
+        if (endGameWhenReachLastTile && enteredBoard[player])
+        {
+            int lastIndex = waypoints.Count - 1; // P120
+            if (playerIndex[player] >= lastIndex)
+            {
+                FinishGame(player);
+                if (cameraFollow != null) cameraFollow.ResetFocus();
+                isMoving = false;
+                gameFinished = true;
+                yield break;
+            }
+        }
+
+        if (cameraFollow != null)
+            cameraFollow.ResetFocus();
 
         isMoving = false;
 
         // next player's turn
         currentTurn = (currentTurn + 1) % PlayerRegistry.Players.Count;
 
-        // prepare for next roll
         dice.ResetDice();
         consumedThisLanding = false;
     }
@@ -200,6 +260,8 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
 
     private IEnumerator MoveToTarget(Transform player, Transform target, float speedMult = 1f)
     {
+        SetIdleWalk(player, true);
+
         while (Vector3.Distance(player.position, target.position) > arriveDistance)
         {
             player.position = Vector3.MoveTowards(
@@ -208,7 +270,6 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
                 (moveSpeed * speedMult) * Time.deltaTime
             );
 
-            // Always face camera so name is visible
             if (faceCameraAlways)
             {
                 if (faceCamera == null) faceCamera = Camera.main;
@@ -234,6 +295,23 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
 
             yield return null;
         }
+
+        SetIdleWalk(player, false);
+    }
+
+    private Animator GetAnimator(Transform player)
+    {
+        var anim = player.GetComponent<Animator>();
+        if (anim != null) return anim;
+        return player.GetComponentInChildren<Animator>();
+    }
+
+    private void SetIdleWalk(Transform player, bool walking)
+    {
+        var anim = GetAnimator(player);
+        if (anim == null) return;
+        anim.SetBool("walk", walking);
+        anim.SetBool("idle", !walking);
     }
 
     private bool TryGetJumpDestination(int tileNumber, out int destTileNumber)
@@ -246,14 +324,11 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
                 return true;
             }
         }
-
         destTileNumber = tileNumber;
         return false;
     }
 
-    // Converts tile number (like 4) to waypoint list index (0 = P2)
-    private int TileToIndex(int tileNumber) => tileNumber - firstWaypointIndex;
-
+    private int TileToIndex(int tileNumber) => tileNumber - firstWaypointIndex; // tile 2 -> 0
     private int IndexToTile(int index) => index + firstWaypointIndex;
 
     private int ParseDiceNumber(string s)
@@ -266,12 +341,163 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
     private void BuildWaypointList()
     {
         waypoints.Clear();
-
         for (int i = firstWaypointIndex; i <= lastWaypointIndex; i++)
         {
             GameObject go = GameObject.Find(waypointPrefix + i);
             if (go != null) waypoints.Add(go.transform);
             else Debug.LogWarning("Missing waypoint: " + waypointPrefix + i);
+        }
+    }
+    private void FinishGame(Transform winner)
+    {
+        float timeSeconds = Time.time - gameStartTime;
+
+        string playerName = PlayerPrefs.GetString("PlayerName", "Player");
+        int moves = totalDiceThrows;
+
+        int finalScore = baseScore;
+        if (finalScore == 0)
+            finalScore = Mathf.Max(0, 10000 - Mathf.RoundToInt(timeSeconds * 10f) - moves * 50);
+
+        SaveToLeaderboardFile(playerName, timeSeconds, moves, finalScore, totalTilesMoved);
+
+        Debug.Log($"WIN! time={timeSeconds:F1}s moves={moves} score={finalScore}");
+
+        // ✅ SHOW UI FIRST
+        if (winUI != null)
+        {
+            // make sure the panel is active + on top
+            winUI.gameObject.SetActive(true);
+            winUI.transform.SetAsLastSibling();
+
+            // update texts
+            winUI.Show(timeSeconds, moves, finalScore);
+        }
+        else if (winScreen != null)
+        {
+            winScreen.SetActive(true);
+            winScreen.transform.SetAsLastSibling();
+        }
+        else
+        {
+            Debug.LogWarning("No win UI assigned (winUI/winScreen are null).");
+        }
+
+        // ✅ Freeze AFTER UI is visible
+        StartCoroutine(FreezeNextFrame());
+    }
+
+
+
+    public void GoToMenu()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("SampleScene");
+    }
+
+
+    private void SaveToLeaderboardFile(string playerName, float timeSeconds, int moves, int score, int tilesMoved)
+    {
+        EntryList data = LoadLeaderboardFile();
+
+        data.entries.Add(new Entry
+        {
+            name = playerName,
+            timeSeconds = timeSeconds,
+            moves = moves,
+            score = score,
+            tilesMoved = tilesMoved,
+            date = DateTime.Now.ToString("yyyy-MM-dd")
+        });
+
+        // Sort: score desc, time asc, moves asc
+        data.entries.Sort((a, b) =>
+        {
+            int s = b.score.CompareTo(a.score);
+            if (s != 0) return s;
+
+            int t = a.timeSeconds.CompareTo(b.timeSeconds);
+            if (t != 0) return t;
+
+            return a.moves.CompareTo(b.moves);
+        });
+
+        if (data.entries.Count > maxLeaderboardEntries)
+            data.entries.RemoveRange(maxLeaderboardEntries, data.entries.Count - maxLeaderboardEntries);
+
+        try
+        {
+            File.WriteAllText(savePath, JsonUtility.ToJson(data, true));
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("Failed to save leaderboard: " + ex.Message);
+        }
+    }
+
+    private IEnumerator MoveWithBounceBack(Transform player, int steps)
+    {
+        int currentIdx = playerIndex[player];
+        int lastIdx = waypoints.Count - 1;
+
+        int targetIdx = currentIdx + steps;
+
+        // CASE 1: normal move (no overflow)
+        if (targetIdx <= lastIdx)
+        {
+            for (int i = 0; i < steps; i++)
+            {
+                currentIdx++;
+                playerIndex[player] = currentIdx;
+                yield return MoveToTarget(player, waypoints[currentIdx]);
+                yield return new WaitForSeconds(stepPause);
+            }
+            yield break;
+        }
+
+        // CASE 2: overflow → bounce back
+        int stepsToEnd = lastIdx - currentIdx;
+        int overflow = targetIdx - lastIdx;
+
+        // move forward to last tile
+        for (int i = 0; i < stepsToEnd; i++)
+        {
+            currentIdx++;
+            playerIndex[player] = currentIdx;
+            yield return MoveToTarget(player, waypoints[currentIdx]);
+            yield return new WaitForSeconds(stepPause);
+        }
+
+        // bounce backwards
+        for (int i = 0; i < overflow; i++)
+        {
+            currentIdx--;
+            playerIndex[player] = currentIdx;
+            yield return MoveToTarget(player, waypoints[currentIdx]);
+            yield return new WaitForSeconds(stepPause);
+        }
+    }
+
+    private IEnumerator FreezeNextFrame()
+    {
+        yield return null;   // wait 1 frame so UI shows
+        Time.timeScale = 0f;
+    }
+
+    private EntryList LoadLeaderboardFile()
+    {
+        try
+        {
+            if (!File.Exists(savePath))
+                return new EntryList();
+
+            string json = File.ReadAllText(savePath);
+            var data = JsonUtility.FromJson<EntryList>(json);
+            return data ?? new EntryList();
+        }
+        catch
+        {
+            return new EntryList();
         }
     }
 }

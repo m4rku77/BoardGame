@@ -13,6 +13,12 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
     [SerializeField] private KeyCode debugWinKey = KeyCode.F9;
 
 
+    [Header("Six Roll Animation")]
+    [SerializeField] private bool playAnimOnSix = true;
+    [SerializeField] private string sixAnimTrigger = "six";   // Animator Trigger name
+    [SerializeField] private float sixAnimWait = 0.7f;        // seconds to wait before moving
+
+
     [Header("Win Screen")]
     [SerializeField] private GameObject winScreen;
 
@@ -142,6 +148,21 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
         }
     }
 
+    private IEnumerator PlaySixAnimationIfNeeded(Transform player, int rolledSteps)
+    {
+        if (!playAnimOnSix) yield break;
+        if (rolledSteps != 6) yield break;
+
+        var anim = GetAnimator(player);
+        if (anim == null) yield break;
+
+        anim.ResetTrigger(sixAnimTrigger);
+        anim.SetTrigger(sixAnimTrigger);
+
+        yield return new WaitForSeconds(sixAnimWait);
+    }
+
+
     private void Update()
     {
         if (enableDebugWinKey && Input.GetKeyDown(debugWinKey) && !gameFinished)
@@ -201,7 +222,6 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
         int rolledSteps = steps;
 
         Transform player = PlayerRegistry.Players[currentTurn];
-
         if (player == null)
         {
             isMoving = false;
@@ -211,11 +231,11 @@ public class TurnBasedBoardMoveOnDice : MonoBehaviour
         if (cameraFollow != null)
             cameraFollow.FocusOn(player);
 
-        if (!enteredBoard.ContainsKey(player))
-        {
-            enteredBoard[player] = false;
-            playerIndex[player] = 0;
-        }
+        
+
+        // ... your existing enteredBoard logic and movement continues
+
+        yield return PlaySixAnimationIfNeeded(player, rolledSteps);
 
         // Spawn -> P2 counts as 1 move
         if (!enteredBoard[player] && steps > 0)
